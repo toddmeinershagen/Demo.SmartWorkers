@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Configuration;
 using System.Threading;
-using Demo.SmartWorkers.Messages;
 using MassTransit;
 
 namespace Demo.SmartWorkers.Publisher
@@ -17,10 +17,12 @@ namespace Demo.SmartWorkers.Publisher
                     new PatientChanged {MedicalRecordNumber = 18750}
                 };
 
+            var publisherUrl = ConfigurationManager.AppSettings["publisherUrl"];
+
             Bus.Initialize(sbc =>
             {
                 sbc.UseRabbitMq();
-                sbc.ReceiveFrom("rabbitmq://localhost/Demo.SmartWorkers.Publisher");
+                sbc.ReceiveFrom(string.Format(publisherUrl));
             });
 
 
@@ -36,21 +38,10 @@ namespace Demo.SmartWorkers.Publisher
                 var message = patientChangedMessages[index];
                 message.SequenceNumber = counter;
                 Bus.Instance.Publish(message);
-
-                if (counter%2 != 0)
-                {
-                    Thread.Sleep(500);
-                }
             }
 
             Console.WriteLine("Published {0} messages", totalCount);
             Console.ReadLine();
         }
-    }
-
-    public class PatientChanged : IPatientChanged
-    {
-        public int MedicalRecordNumber { get; set; }
-        public int SequenceNumber { get; set; }
     }
 }
