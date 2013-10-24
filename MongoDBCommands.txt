@@ -1,0 +1,14 @@
+#Clear All Collections
+db.patientLocks.remove()
+db.patientChangedSnapshots.remove()
+db.patientVersionForPublisher.remove()
+db.patientVersionForConsumer.remove()
+
+#Get Records for Each Collection
+db.patientLocks.remove()
+db.patientChangedSnapshots.remove()
+db.patientVersionForPublisher.remove()
+db.patientVersionForConsumer.remove()
+
+#Get Count for Table
+db.runCommand({count:"patientChangedSnapshots"})

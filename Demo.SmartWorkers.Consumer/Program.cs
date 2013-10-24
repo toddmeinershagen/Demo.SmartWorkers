@@ -22,7 +22,7 @@ namespace Demo.SmartWorkers.Consumer
             {
                 sbc.UseRabbitMq();
                 sbc.ReceiveFrom(consumerUrl);
-                sbc.SetConcurrentConsumerLimit(1);
+                sbc.SetConcurrentConsumerLimit(4);
                 sbc.Subscribe(subs => subs.Consumer<PatientChangedConsumer>());
             });
 

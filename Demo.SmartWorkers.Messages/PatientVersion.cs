@@ -1,10 +1,9 @@
-﻿using Demo.SmartWorkers.Messages;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace Demo.SmartWorkers.Publisher
+namespace Demo.SmartWorkers.Messages
 {
     [BsonIgnoreExtraElements]
-    public class PatientChanged : IPatientChanged
+    public class PatientVersion
     {
         public int FacilityId { get; set; }
         public int MedicalRecordNumber { get; set; }

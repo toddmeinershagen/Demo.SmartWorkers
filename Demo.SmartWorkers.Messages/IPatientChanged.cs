@@ -2,7 +2,8 @@
 {
     public interface IPatientChanged
     {
+        int FacilityId { get; }
         int MedicalRecordNumber { get; }
-        int SequenceNumber { get; }
+        int Version { get; }
     }
 }
