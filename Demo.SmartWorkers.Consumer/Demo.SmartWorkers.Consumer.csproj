@@ -69,8 +69,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PatientChangedConsumer.cs" />
-    <Compile Include="PatientChangedSnapshot.cs" />
-    <Compile Include="PatientLock.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -79,6 +77,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Demo.SmartWorkers.Data\Demo.SmartWorkers.Data.csproj">
+      <Project>{b8ed2bd6-0879-4e49-86f7-fb6d6f3f339e}</Project>
+      <Name>Demo.SmartWorkers.Data</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Demo.SmartWorkers.Messages\Demo.SmartWorkers.Messages.csproj">
       <Project>{d5139d8b-a572-4fd3-bec7-39d9fe90d3c2}</Project>
       <Name>Demo.SmartWorkers.Messages</Name>

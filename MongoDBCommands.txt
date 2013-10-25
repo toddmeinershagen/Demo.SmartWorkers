@@ -12,3 +12,8 @@ db.patientVersionForConsumer.remove()
 
 #Get Count for Table
 db.runCommand({count:"patientChangedSnapshots"})
+db.patientChangedSnapshots.find().count()
+
+#navigating to the executable and starting connection to db
+cd \mongodb\bin
+mongo.exe smartworkers

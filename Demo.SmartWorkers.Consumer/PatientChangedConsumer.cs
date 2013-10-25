@@ -1,56 +1,51 @@
 ﻿using System;
+using System.Threading;
+using Demo.SmartWorkers.Data;
 using Demo.SmartWorkers.Messages;
 using MassTransit;
 using MongoDB.Driver;
-using MongoDB.Driver.Builders;
 
 namespace Demo.SmartWorkers.Consumer
 {
     public class PatientChangedConsumer : Consumes<IPatientChanged>.Context
     {
+        private readonly IPatientLockRepository _patientLockRepository;
+        private readonly IPatientVersionRepository _patientVersionRepository;
+        private readonly IPatientChangedSnapshotRepository _patientChangedSnapshotRepository;
+
+        public PatientChangedConsumer()
+            : this(new PatientLockRepository(), new PatientVersionRepository("patientVersionForConsumer"), new PatientChangedSnapshotRepository())
+        {}
+
+        public PatientChangedConsumer(IPatientLockRepository patientLockRepository, IPatientVersionRepository patientVersionRepository, IPatientChangedSnapshotRepository patientChangedSnapshotRepository)
+        {
+            _patientLockRepository = patientLockRepository;
+            _patientVersionRepository = patientVersionRepository;
+            _patientChangedSnapshotRepository = patientChangedSnapshotRepository;
+        }
+
         public void Consume(IConsumeContext<IPatientChanged> context)
         {
+            //Throttle(.125);
+            Throttle(0);
+
             var message = context.Message;
 
-            //check for lock existence.
-            var database = GetDatabase();
-            var patientLocks = database.GetCollection<PatientLock>("patientLocks");
-
-            var query = Query.And(
-                Query<PatientLock>.EQ(e => e.FacilityId, message.FacilityId),
-                Query<PatientLock>.EQ(e => e.MedicalRecordNumber, message.MedicalRecordNumber));
-
-            var patientLock = patientLocks.FindOne(query);
-
-            if (patientLock == null)
+            if (_patientLockRepository.DoesNotExistFor(message.FacilityId, message.MedicalRecordNumber))
             {                
                 try
                 {
-                    var options = new MongoInsertOptions();
-                    var concern = new WriteConcern();
-                    options.WriteConcern = concern;
+                    _patientLockRepository.Insert(new PatientLock { FacilityId = message.FacilityId, MedicalRecordNumber = message.MedicalRecordNumber });
 
-                    patientLocks.Insert(new PatientLock { FacilityId = message.FacilityId, MedicalRecordNumber = message.MedicalRecordNumber }, options);
-
-                    var patientVersions = database.GetCollection<PatientVersion>("patientVersionForConsumer");
-                    var patientVersion = patientVersions.FindOne(query);
-
-                    if (patientVersion == null || patientVersion.Version == message.Version - 1)
+                    var patientVersion = _patientVersionRepository.FindOne(message.FacilityId, message.MedicalRecordNumber);
+                    if (DoesNotExist(patientVersion) || IsNextVersion(patientVersion, message))
                     {
-                        var patientChangedSnapshots = database.GetCollection<PatientChangedSnapshot>("patientChangedSnapshots");
-
                         var messageToPersist = new PatientChangedSnapshot(message);
-                        var result = patientChangedSnapshots.Insert(messageToPersist);
+                        var successful = _patientChangedSnapshotRepository.Insert(messageToPersist);
 
-                        if (!result.HasLastErrorMessage)
+                        if (!successful)
                         {
-                            var update = Update<PatientVersion>
-                                .Set(e => e.FacilityId, message.FacilityId)
-                                .Set(e => e.MedicalRecordNumber, message.MedicalRecordNumber)
-                                .Inc(e => e.Version, 1);
-
-                            patientVersions.Update(query, update, UpdateFlags.Upsert);
-
+                            _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
                             Console.WriteLine("Persisted context for MRN::{0}", message.MedicalRecordNumber);
                         }
                     }
@@ -59,7 +54,7 @@ namespace Demo.SmartWorkers.Consumer
                         context.RetryLater();
                     }
 
-                    patientLocks.Remove(query);
+                    _patientLockRepository.Remove(message.FacilityId, message.MedicalRecordNumber);
                 }
                 catch (Exception ex)
                 {
@@ -71,6 +66,22 @@ namespace Demo.SmartWorkers.Consumer
             }
 
             context.RetryLater();
+        }
+
+        private static bool IsNextVersion(PatientVersion patientVersion, IPatientChanged message)
+        {
+            return patientVersion.Version == message.Version - 1;
+        }
+
+        private static bool DoesNotExist(PatientVersion patientVersion)
+        {
+            return patientVersion == null;
+        }
+
+        private void Throttle(double seconds)
+        {
+            var throttleSeconds = Convert.ToInt32(Math.Round(seconds*1000, 0));
+            Thread.Sleep(throttleSeconds);
         }
 
         private MongoDatabase GetDatabase()

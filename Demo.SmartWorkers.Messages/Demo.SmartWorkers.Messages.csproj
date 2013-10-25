@@ -48,6 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IPatientChanged.cs" />
+    <Compile Include="PatientChangedSnapshot.cs" />
+    <Compile Include="PatientLock.cs" />
     <Compile Include="PatientVersion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
