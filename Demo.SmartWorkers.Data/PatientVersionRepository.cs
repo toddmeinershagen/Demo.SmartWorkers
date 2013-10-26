@@ -34,12 +34,15 @@ namespace Demo.SmartWorkers.Data
                 Query<PatientLock>.EQ(e => e.FacilityId, facilityId),
                 Query<PatientLock>.EQ(e => e.MedicalRecordNumber, medicalRecordNumber));
 
+            var options = new MongoInsertOptions();
+            var concern = new WriteConcern();
+            options.WriteConcern = concern;
+
             var update = Update<PatientVersion>
                 .Set(e => e.FacilityId, facilityId)
                 .Set(e => e.MedicalRecordNumber, medicalRecordNumber)
                 .Inc(e => e.Version, 1);
 
-            //patientVersions.Update(query, update, UpdateFlags.Upsert);
             var result = patientVersions.FindAndModify(query, SortBy.Null, update, true, true);
             return GetVersionFromResult(result);
         }

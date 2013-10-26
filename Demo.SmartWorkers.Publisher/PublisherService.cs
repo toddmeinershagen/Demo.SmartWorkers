@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Threading;
 using Demo.SmartWorkers.Data;
 using MassTransit;
@@ -38,15 +39,16 @@ namespace Demo.SmartWorkers.Publisher
             const int totalCount = 1000;
             for (var counter = 0; counter < totalCount; counter++)
             {
-                var index = generator.Next(0, patientChangedMessages.Length - 1);
+                var index = generator.Next(0, patientChangedMessages.Length);
                 var message = patientChangedMessages[index];
 
                 message.Version = _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
                 _bus.Publish(message);
 
                 Console.WriteLine("Published message for MRN::{0}", message.MedicalRecordNumber);
-                //Throttle(.125);
-                Throttle(0);
+
+                var throttleInSeconds = Convert.ToDouble(ConfigurationManager.AppSettings["throttleInSeconds"]);
+                Throttle(throttleInSeconds);
             }
 
             Console.WriteLine("Published {0} messages", totalCount);

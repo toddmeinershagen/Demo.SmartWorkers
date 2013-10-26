@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Threading;
 using Demo.SmartWorkers.Data;
 using Demo.SmartWorkers.Messages;
@@ -26,8 +27,8 @@ namespace Demo.SmartWorkers.Consumer
 
         public void Consume(IConsumeContext<IPatientChanged> context)
         {
-            //Throttle(.125);
-            Throttle(0);
+            var throttleInSeconds = Convert.ToDouble(ConfigurationManager.AppSettings["throttleInSeconds"]);
+            Throttle(throttleInSeconds);
 
             var message = context.Message;
 
