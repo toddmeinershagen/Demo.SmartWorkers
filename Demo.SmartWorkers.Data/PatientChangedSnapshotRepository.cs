@@ -1,4 +1,5 @@
 ﻿using Demo.SmartWorkers.Messages;
+using MongoDB.Driver;
 
 namespace Demo.SmartWorkers.Data
 {
@@ -12,7 +13,12 @@ namespace Demo.SmartWorkers.Data
             var messageToPersist = new PatientChangedSnapshot(snapshot);
             var result = patientChangedSnapshots.Insert(messageToPersist);
 
-            return result.HasLastErrorMessage;
+            return WasSuccessful(result);
+        }
+
+        private static bool WasSuccessful(WriteConcernResult result)
+        {
+            return !result.HasLastErrorMessage;
         }
     }
 }

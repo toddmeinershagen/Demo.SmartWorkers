@@ -4,25 +4,22 @@ using System.Threading;
 using Demo.SmartWorkers.Data;
 using Demo.SmartWorkers.Messages;
 using MassTransit;
-using MongoDB.Driver;
 
 namespace Demo.SmartWorkers.Consumer
 {
     public class PatientChangedConsumer : Consumes<IPatientChanged>.Context
     {
-        private readonly IPatientLockRepository _patientLockRepository;
         private readonly IPatientVersionRepository _patientVersionRepository;
-        private readonly IPatientChangedSnapshotRepository _patientChangedSnapshotRepository;
+        private readonly IMessageProcessor _messageProcessor;
 
         public PatientChangedConsumer()
-            : this(new PatientLockRepository(), new PatientVersionRepository("patientVersionForConsumer"), new PatientChangedSnapshotRepository())
+            : this(new PatientVersionRepository("patientVersionForConsumer"), new MessageProcessor(new PatientChangedSnapshotRepository()))
         {}
 
-        public PatientChangedConsumer(IPatientLockRepository patientLockRepository, IPatientVersionRepository patientVersionRepository, IPatientChangedSnapshotRepository patientChangedSnapshotRepository)
+        public PatientChangedConsumer(IPatientVersionRepository patientVersionRepository, IMessageProcessor messageProcessor)
         {
-            _patientLockRepository = patientLockRepository;
             _patientVersionRepository = patientVersionRepository;
-            _patientChangedSnapshotRepository = patientChangedSnapshotRepository;
+            _messageProcessor = messageProcessor;
         }
 
         public void Consume(IConsumeContext<IPatientChanged> context)
@@ -31,49 +28,28 @@ namespace Demo.SmartWorkers.Consumer
             Throttle(throttleInSeconds);
 
             var message = context.Message;
-
-            var expirationInMinutes = Convert.ToInt32(ConfigurationManager.AppSettings["expirationInMinutes"]);
-            _patientLockRepository.Expire(expirationInMinutes);
-
-            if (_patientLockRepository.DoesNotExistFor(message.FacilityId, message.MedicalRecordNumber))
-            {                
-                try
+                
+            try
+            {
+                var patientVersion = _patientVersionRepository.FindOne(message.FacilityId, message.MedicalRecordNumber);
+                if ((DoesNotExist(patientVersion)  && (message.Version == 1)) || IsNextVersion(patientVersion, message))
                 {
-                    _patientLockRepository.Insert(new PatientLock { FacilityId = message.FacilityId, MedicalRecordNumber = message.MedicalRecordNumber });
-
-                    var patientVersion = _patientVersionRepository.FindOne(message.FacilityId, message.MedicalRecordNumber);
-                    if (DoesNotExist(patientVersion) || IsNextVersion(patientVersion, message))
+                    if (_messageProcessor.Process(message))
                     {
-                        Process(message);
+                        _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
+                        Console.WriteLine("Persisted context for MRN::{0}", message.MedicalRecordNumber);
                     }
-                    else
-                    {
-                        context.RetryLater();
-                    }
-
-                    _patientLockRepository.Remove(message.FacilityId, message.MedicalRecordNumber);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine(ex.Message);
                     context.RetryLater();
                 }
 
-                return;
             }
-
-            context.RetryLater();
-        }
-
-        private void Process(IPatientChanged message)
-        {
-            var messageToPersist = new PatientChangedSnapshot(message);
-            var successful = _patientChangedSnapshotRepository.Insert(messageToPersist);
-
-            if (!successful)
+            catch (Exception ex)
             {
-                _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
-                Console.WriteLine("Persisted context for MRN::{0}", message.MedicalRecordNumber);
+                Console.WriteLine(ex.Message);
+                context.RetryLater();
             }
         }
 
@@ -91,16 +67,6 @@ namespace Demo.SmartWorkers.Consumer
         {
             var throttleSeconds = Convert.ToInt32(Math.Round(seconds*1000, 0));
             Thread.Sleep(throttleSeconds);
-        }
-
-        private MongoDatabase GetDatabase()
-        {
-            const string connectionString = "mongodb://localhost";
-            var client = new MongoClient(connectionString);
-            var server = client.GetServer();
-            var database = server.GetDatabase("smartworkers");
-
-            return database;
         }
     }
 }
