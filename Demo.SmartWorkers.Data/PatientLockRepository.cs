@@ -1,4 +1,5 @@
-﻿using Demo.SmartWorkers.Messages;
+﻿using System;
+using Demo.SmartWorkers.Messages;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 
@@ -42,6 +43,17 @@ namespace Demo.SmartWorkers.Data
             var patientLocks = database.GetCollection<PatientLock>("patientLocks");
 
             patientLocks.Remove(query);
+        }
+
+        public void Expire(int expirationInMinutes)
+        {
+            var minTimeStamp = DateTime.UtcNow.AddMinutes(-1*expirationInMinutes);
+            var query = Query.And(Query<PatientLock>.LTE(e => e.UtcTimeStamp, minTimeStamp));
+
+            var database = GetDatabase();
+            var patientLocks = database.GetCollection<PatientLock>("patientLocks");
+
+            patientLocks.Remove(query, WriteConcern.Acknowledged);
         }
     }
 }

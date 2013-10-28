@@ -17,3 +17,11 @@ db.patientChangedSnapshots.find().count()
 #navigating to the executable and starting connection to db
 cd \mongodb\bin
 mongo.exe smartworkers
+
+#insert a lock
+{
+  "_id" : ObjectId("526ec4656a4aad3aa7b5acc8"),
+  "FacilityId" : 1,
+  "MedicalRecordNumber" : 12700,
+  "UtcTimeStamp" : ISODate("2013-10-28T20:09:09.142Z")
+}

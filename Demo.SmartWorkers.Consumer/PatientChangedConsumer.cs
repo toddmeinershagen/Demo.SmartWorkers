@@ -32,6 +32,9 @@ namespace Demo.SmartWorkers.Consumer
 
             var message = context.Message;
 
+            var expirationInMinutes = Convert.ToInt32(ConfigurationManager.AppSettings["expirationInMinutes"]);
+            _patientLockRepository.Expire(expirationInMinutes);
+
             if (_patientLockRepository.DoesNotExistFor(message.FacilityId, message.MedicalRecordNumber))
             {                
                 try
@@ -41,14 +44,7 @@ namespace Demo.SmartWorkers.Consumer
                     var patientVersion = _patientVersionRepository.FindOne(message.FacilityId, message.MedicalRecordNumber);
                     if (DoesNotExist(patientVersion) || IsNextVersion(patientVersion, message))
                     {
-                        var messageToPersist = new PatientChangedSnapshot(message);
-                        var successful = _patientChangedSnapshotRepository.Insert(messageToPersist);
-
-                        if (!successful)
-                        {
-                            _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
-                            Console.WriteLine("Persisted context for MRN::{0}", message.MedicalRecordNumber);
-                        }
+                        Process(message);
                     }
                     else
                     {
@@ -69,12 +65,24 @@ namespace Demo.SmartWorkers.Consumer
             context.RetryLater();
         }
 
-        private static bool IsNextVersion(PatientVersion patientVersion, IPatientChanged message)
+        private void Process(IPatientChanged message)
+        {
+            var messageToPersist = new PatientChangedSnapshot(message);
+            var successful = _patientChangedSnapshotRepository.Insert(messageToPersist);
+
+            if (!successful)
+            {
+                _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
+                Console.WriteLine("Persisted context for MRN::{0}", message.MedicalRecordNumber);
+            }
+        }
+
+        private bool IsNextVersion(PatientVersion patientVersion, IPatientChanged message)
         {
             return patientVersion.Version == message.Version - 1;
         }
 
-        private static bool DoesNotExist(PatientVersion patientVersion)
+        private bool DoesNotExist(PatientVersion patientVersion)
         {
             return patientVersion == null;
         }

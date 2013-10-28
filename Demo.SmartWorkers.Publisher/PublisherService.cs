@@ -21,7 +21,7 @@ namespace Demo.SmartWorkers.Publisher
         {
             var patientChangedMessages = new[]
                 {
-                    new PatientChanged {FacilityId = 1, MedicalRecordNumber = 12700}, 
+                    new PatientChanged {FacilityId = 1, MedicalRecordNumber = 12700},
                     new PatientChanged {FacilityId = 1, MedicalRecordNumber = 13567},
                     new PatientChanged {FacilityId = 2, MedicalRecordNumber = 14726}, 
                     new PatientChanged {FacilityId = 3, MedicalRecordNumber = 18750},

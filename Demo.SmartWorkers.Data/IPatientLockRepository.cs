@@ -7,5 +7,6 @@ namespace Demo.SmartWorkers.Data
         bool DoesNotExistFor(int facilityId, int medicalRecordNumber);
         void Insert(PatientLock patientLock);
         void Remove(int facilityId, int medicalRecordNumber);
+        void Expire(int expirationInMinutes);
     }
 }
