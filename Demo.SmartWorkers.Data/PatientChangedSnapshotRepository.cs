@@ -11,8 +11,7 @@ namespace Demo.SmartWorkers.Data
             var database = GetDatabase();
             var patientChangedSnapshots = database.GetCollection<PatientChangedSnapshot>("patientChangedSnapshots");
 
-            var messageToPersist = new PatientChangedSnapshot(snapshot);
-            var result = patientChangedSnapshots.Insert(messageToPersist);
+            var result = patientChangedSnapshots.Insert(snapshot);
 
             return WasSuccessful(result);
         }

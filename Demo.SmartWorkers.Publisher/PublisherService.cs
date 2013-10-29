@@ -20,7 +20,7 @@ namespace Demo.SmartWorkers.Publisher
             _bus = bus;
         }
 
-        public void Execute()
+        public void Publish(int numberToPublish)
         {
             var patientChangedMessages = new[]
                 {
@@ -34,13 +34,9 @@ namespace Demo.SmartWorkers.Publisher
                     new PatientChanged {FacilityId = 3, MedicalRecordNumber = 18751}
                 };
 
-            Console.WriteLine("Are you ready?  (Hit ENTER)");
-            Console.ReadLine();
-
             var generator = new Random();
 
-            const int totalCount = 1000;
-            for (var counter = 0; counter < totalCount; counter++)
+            for (var counter = 0; counter < numberToPublish; counter++)
             {
                 var index = generator.Next(0, patientChangedMessages.Length);
                 var message = patientChangedMessages[index];
@@ -54,9 +50,6 @@ namespace Demo.SmartWorkers.Publisher
                 var throttleInSeconds = Convert.ToDouble(ConfigurationManager.AppSettings["throttleInSeconds"]);
                 Throttle(throttleInSeconds);
             }
-
-            Console.WriteLine("Published {0} messages", totalCount);
-            Console.ReadLine();
         }
 
         private void Throttle(double seconds)

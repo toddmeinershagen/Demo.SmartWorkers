@@ -2,7 +2,7 @@
 
 namespace Demo.SmartWorkers.Core
 {
-    public class PatientChangedSnapshot : IPatientChanged
+    public class PatientChangedSnapshot
     {
         public PatientChangedSnapshot(IPatientChanged message)
         {

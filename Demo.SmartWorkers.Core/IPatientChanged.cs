@@ -5,5 +5,6 @@
         int FacilityId { get; }
         int MedicalRecordNumber { get; }
         int Version { get; }
+        int PreviousVersion { get; }
     }
 }

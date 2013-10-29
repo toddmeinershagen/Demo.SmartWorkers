@@ -48,6 +48,18 @@ namespace Demo.SmartWorkers.Data
             return GetVersionFromResult(result);
         }
 
+        public void Remove(int facilityId, int medicalRecordNumber)
+        {
+            var query = Query.And(
+                Query<PatientVersion>.EQ(e => e.FacilityId, facilityId),
+                Query<PatientVersion>.EQ(e => e.MedicalRecordNumber, medicalRecordNumber));
+
+            var database = GetDatabase();
+            var patientVersions = database.GetCollection<PatientLock>(_collectionName);
+
+            patientVersions.Remove(query);
+        }
+
         private int GetVersionFromResult(FindAndModifyResult result)
         {
             var value = result.Response["value"];

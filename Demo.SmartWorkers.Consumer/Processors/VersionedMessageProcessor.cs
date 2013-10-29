@@ -1,6 +1,5 @@
 ﻿using Demo.SmartWorkers.Core;
 using Demo.SmartWorkers.Core.Data;
-using Demo.SmartWorkers.Data;
 
 namespace Demo.SmartWorkers.Consumer.Processors
 {
@@ -19,7 +18,7 @@ namespace Demo.SmartWorkers.Consumer.Processors
         {
             var patientVersion = _patientVersionRepository.FindOne(message.FacilityId, message.MedicalRecordNumber);
 
-            if ((DoesNotExist(patientVersion) && message.Version == 1) || (IsNextVersion(patientVersion, message)))
+            if (message.Version == 1 && (DoesNotExist(patientVersion) || message.PreviousVersion == patientVersion.Version) || (IsNextVersion(patientVersion, message)))
             {
                 if (_messageProcessor.Process(message))
                 {

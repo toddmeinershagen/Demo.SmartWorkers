@@ -14,7 +14,6 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         [SetUp]
         public void SetUp()
         {
-            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(null as PatientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -48,7 +47,6 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         [SetUp]
         public void SetUp()
         {
-            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(null as PatientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -82,7 +80,6 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         [SetUp]
         public void SetUp()
         {
-            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(null as PatientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -113,7 +110,6 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         [SetUp]
         public void SetUp()
         {
-            VersionRepository = Substitute.For<IPatientVersionRepository>();
             var patientVersion = new PatientVersion
                 {
                     FacilityId = FacilityId,
@@ -154,7 +150,6 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         public void SetUp()
         {
             const int currentVersion = 3;
-            VersionRepository = Substitute.For<IPatientVersionRepository>();
             var patientVersion = new PatientVersion
                 {
                     FacilityId = FacilityId,
@@ -195,7 +190,6 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         public void SetUp()
         {
             const int currentVersion = 3;
-            VersionRepository = Substitute.For<IPatientVersionRepository>();
             var patientVersion = new PatientVersion
             {
                 FacilityId = FacilityId,
@@ -228,11 +222,58 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         }
     }
 
+    public class given_version_of_message_is_one_and_previous_version_exists_and_matches_message_and_inner_processor_succeeds_when_processing : VersionedMessageProcessorTestsBase
+    {
+        [SetUp]
+        public void SetUp()
+        {
+            const int currentVersion = 3;
+            var patientVersion = new PatientVersion
+            {
+                FacilityId = FacilityId,
+                MedicalRecordNumber = MedicalRecordNumber,
+                Version = currentVersion
+            };
+
+            VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(patientVersion);
+
+            var innerProcessor = Substitute.For<IMessageProcessor>();
+            innerProcessor.Process(Arg.Any<IPatientChanged>()).Returns(true);
+
+            var message = Substitute.For<IPatientChanged>();
+            message.FacilityId.Returns(FacilityId);
+            message.MedicalRecordNumber.Returns(MedicalRecordNumber);
+            message.Version.Returns(1);
+            message.PreviousVersion.Returns(currentVersion);
+
+            var processor = new VersionedMessageProcessor(innerProcessor, VersionRepository);
+            Result = processor.Process(message);
+        }
+
+        [Test]
+        public void should_increment_version()
+        {
+            VersionRepository.Received(1).Increment(FacilityId, MedicalRecordNumber);
+        }
+
+        [Test]
+        public void should_remove_existing_version()
+        {
+            VersionRepository.Received(1).Remove(FacilityId, MedicalRecordNumber);
+        }
+
+        [Test]
+        public void should_return_true()
+        {
+            Result.Should().BeTrue();
+        }
+    }
+
     public abstract class VersionedMessageProcessorTestsBase
     {
         protected const int FacilityId = 1;
         protected const int MedicalRecordNumber = 12700;
-        protected IPatientVersionRepository VersionRepository;
+        protected IPatientVersionRepository VersionRepository = Substitute.For<IPatientVersionRepository>();
         protected bool Result;   
     }
 }

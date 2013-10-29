@@ -9,5 +9,6 @@ namespace Demo.SmartWorkers.Publisher
         public int FacilityId { get; set; }
         public int MedicalRecordNumber { get; set; }
         public int Version { get; set; }
+        public int PreviousVersion { get; set; }
     }
 }
