@@ -68,6 +68,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IPatientChangedExtensions.cs" />
     <Compile Include="Processors\LockedMessageProcessor.cs" />
     <Compile Include="Processors\IMessageProcessor.cs" />
     <Compile Include="Processors\MessageProcessor.cs" />

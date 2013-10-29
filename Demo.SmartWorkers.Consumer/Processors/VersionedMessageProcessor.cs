@@ -16,9 +16,15 @@ namespace Demo.SmartWorkers.Consumer.Processors
 
         public bool Process(IPatientChanged message)
         {
-            var patientVersion = _patientVersionRepository.FindOne(message.FacilityId, message.MedicalRecordNumber);
+            var latestVersion = _patientVersionRepository.FindOne(message.FacilityId, message.MedicalRecordNumber);
 
-            if (message.Version == 1 && (DoesNotExist(patientVersion) || message.PreviousVersion == patientVersion.Version) || (IsNextVersion(patientVersion, message)))
+            if (message.IsExpirationRequest(latestVersion))
+            {
+                _patientVersionRepository.Remove(message.FacilityId, message.MedicalRecordNumber);
+                latestVersion = null;
+            }
+
+            if (message.IsNextToBeProcessed(latestVersion))
             {
                 if (_messageProcessor.Process(message))
                 {
@@ -28,21 +34,6 @@ namespace Demo.SmartWorkers.Consumer.Processors
             }
 
             return false;
-        }
-
-        private bool IsNextVersion(PatientVersion patientVersion, IPatientChanged message)
-        {
-            return Exists(patientVersion) && patientVersion.Version == message.Version - 1;
-        }
-
-        private bool Exists(PatientVersion patientVersion)
-        {
-            return !DoesNotExist(patientVersion);
-        }
-
-        private bool DoesNotExist(PatientVersion patientVersion)
-        {
-            return patientVersion == null;
         }
     }
 }

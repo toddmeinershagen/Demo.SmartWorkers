@@ -55,6 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IPatientChangedExtensionsTests.cs" />
     <Compile Include="PatientChangedConsumerTests.cs" />
     <Compile Include="Processors\LockedMessageProcessorTests.cs" />
     <Compile Include="Processors\MessageProcessorTests.cs" />

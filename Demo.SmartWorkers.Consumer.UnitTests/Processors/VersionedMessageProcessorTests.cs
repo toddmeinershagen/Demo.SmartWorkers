@@ -1,7 +1,6 @@
 ﻿using Demo.SmartWorkers.Consumer.Processors;
 using Demo.SmartWorkers.Core;
 using Demo.SmartWorkers.Core.Data;
-using Demo.SmartWorkers.Data;
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -14,6 +13,7 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         [SetUp]
         public void SetUp()
         {
+            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(null as PatientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -47,6 +47,7 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         [SetUp]
         public void SetUp()
         {
+            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(null as PatientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -80,6 +81,7 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         [SetUp]
         public void SetUp()
         {
+            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(null as PatientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -117,6 +119,7 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
                     Version = 3
                 };
 
+            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(patientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -157,6 +160,7 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
                     Version = currentVersion
                 };
 
+            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(patientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -197,6 +201,7 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
                 Version = currentVersion
             };
 
+            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(patientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -235,6 +240,7 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
                 Version = currentVersion
             };
 
+            VersionRepository = Substitute.For<IPatientVersionRepository>();
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(patientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
@@ -273,7 +279,7 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
     {
         protected const int FacilityId = 1;
         protected const int MedicalRecordNumber = 12700;
-        protected IPatientVersionRepository VersionRepository = Substitute.For<IPatientVersionRepository>();
+        protected IPatientVersionRepository VersionRepository;
         protected bool Result;   
     }
 }
