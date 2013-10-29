@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using Demo.SmartWorkers.Core;
 using Demo.SmartWorkers.Data;
 using MassTransit;
 
@@ -15,7 +16,7 @@ namespace Demo.SmartWorkers.Publisher
                 sbc.ReceiveFrom(string.Format(publisherUrl));
             });
 
-            var service = new PublisherService(new PatientVersionRepository("patientVersionForPublisher"), Bus.Instance);
+            var service = new PublisherService(new ConsoleLogger(), new PatientVersionRepository("patientVersionForPublisher"), Bus.Instance);
             service.Execute();
         }
     }

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D5139D8B-A572-4FD3-BEC7-39D9FE90D3C2}</ProjectGuid>
+    <ProjectGuid>{9209BFB9-2BC7-4267-BE21-0C4EF47A6CC3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Demo.SmartWorkers.Messages</RootNamespace>
-    <AssemblyName>Demo.SmartWorkers.Messages</AssemblyName>
+    <RootNamespace>Demo.SmartWorkers.Core</RootNamespace>
+    <AssemblyName>Demo.SmartWorkers.Core</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -47,7 +47,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleLogger.cs" />
+    <Compile Include="ILogger.cs" />
     <Compile Include="IPatientChanged.cs" />
+    <Compile Include="Data\IPatientChangedSnapshotRepository.cs" />
+    <Compile Include="Data\IPatientLockRepository.cs" />
+    <Compile Include="Data\IPatientVersionRepository.cs" />
     <Compile Include="PatientChangedSnapshot.cs" />
     <Compile Include="PatientLock.cs" />
     <Compile Include="PatientVersion.cs" />

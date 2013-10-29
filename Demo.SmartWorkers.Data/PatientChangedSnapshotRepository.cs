@@ -1,4 +1,5 @@
-﻿using Demo.SmartWorkers.Messages;
+﻿using Demo.SmartWorkers.Core;
+using Demo.SmartWorkers.Core.Data;
 using MongoDB.Driver;
 
 namespace Demo.SmartWorkers.Data

@@ -1,72 +1,58 @@
 ﻿using System;
-using System.Configuration;
-using System.Threading;
+using Demo.SmartWorkers.Consumer.Processors;
+using Demo.SmartWorkers.Core;
 using Demo.SmartWorkers.Data;
-using Demo.SmartWorkers.Messages;
 using MassTransit;
 
 namespace Demo.SmartWorkers.Consumer
 {
     public class PatientChangedConsumer : Consumes<IPatientChanged>.Context
     {
-        private readonly IPatientVersionRepository _patientVersionRepository;
+        private readonly ILogger _logger;
         private readonly IMessageProcessor _messageProcessor;
 
         public PatientChangedConsumer()
-            : this(new PatientVersionRepository("patientVersionForConsumer"), new MessageProcessor(new PatientChangedSnapshotRepository()))
-        {}
+            : this(new ConsoleLogger())
+        { }
 
-        public PatientChangedConsumer(IPatientVersionRepository patientVersionRepository, IMessageProcessor messageProcessor)
+        public PatientChangedConsumer(ILogger logger)
+            : this(logger,
+            new ThrottledMessageProcessor(
+                new VersionedMessageProcessor(
+                    new MessageProcessor(logger, new PatientChangedSnapshotRepository()), new PatientVersionRepository("patientVersionForConsumer"))))
+        { }
+
+        //NOTE:  This version is with the locking decorator.  It is no longer needed, but here for demonstration purposes.
+        //public PatientChangedConsumer(ILogger logger)
+        //    : this(logger, 
+        //    new ThrottledMessageProcessor(
+        //        new LockedMessageProcessor(
+        //            new VersionedMessageProcessor(
+        //                new MessageProcessor(logger, new PatientChangedSnapshotRepository()), new PatientVersionRepository("patientVersionForConsumer")), new PatientLockRepository())))
+        //{}
+
+        public PatientChangedConsumer(ILogger logger, IMessageProcessor messageProcessor)
         {
-            _patientVersionRepository = patientVersionRepository;
+            _logger = logger;
             _messageProcessor = messageProcessor;
         }
 
         public void Consume(IConsumeContext<IPatientChanged> context)
         {
-            var throttleInSeconds = Convert.ToDouble(ConfigurationManager.AppSettings["throttleInSeconds"]);
-            Throttle(throttleInSeconds);
-
             var message = context.Message;
                 
             try
             {
-                var patientVersion = _patientVersionRepository.FindOne(message.FacilityId, message.MedicalRecordNumber);
-                if ((DoesNotExist(patientVersion)  && (message.Version == 1)) || IsNextVersion(patientVersion, message))
-                {
-                    if (_messageProcessor.Process(message))
-                    {
-                        _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
-                        Console.WriteLine("Persisted context for MRN::{0}", message.MedicalRecordNumber);
-                    }
-                }
-                else
+                if(!_messageProcessor.Process(message))
                 {
                     context.RetryLater();
                 }
-
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Console.WriteLine(ex.Message);
+                _logger.Error(exception);
                 context.RetryLater();
             }
-        }
-
-        private bool IsNextVersion(PatientVersion patientVersion, IPatientChanged message)
-        {
-            return patientVersion.Version == message.Version - 1;
-        }
-
-        private bool DoesNotExist(PatientVersion patientVersion)
-        {
-            return patientVersion == null;
-        }
-
-        private void Throttle(double seconds)
-        {
-            var throttleSeconds = Convert.ToInt32(Math.Round(seconds*1000, 0));
-            Thread.Sleep(throttleSeconds);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Demo.SmartWorkers.Messages
+﻿namespace Demo.SmartWorkers.Core
 {
     public interface IPatientChanged
     {

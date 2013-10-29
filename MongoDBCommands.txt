@@ -25,3 +25,6 @@ mongo.exe smartworkers
   "MedicalRecordNumber" : 12700,
   "UtcTimeStamp" : ISODate("2013-10-28T20:09:09.142Z")
 }
+
+#create unique index for locks
+db.patientLocks.ensureIndex( { facilityId:1, medicalRecordNumber:1 }, { unique: true } )

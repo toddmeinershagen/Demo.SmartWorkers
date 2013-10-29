@@ -1,6 +1,6 @@
-﻿using Demo.SmartWorkers.Messages;
+﻿using Demo.SmartWorkers.Core;
 
-namespace Demo.SmartWorkers.Consumer
+namespace Demo.SmartWorkers.Consumer.Processors
 {
     public interface IMessageProcessor
     {

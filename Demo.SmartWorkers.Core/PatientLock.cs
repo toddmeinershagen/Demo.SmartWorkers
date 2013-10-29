@@ -1,7 +1,7 @@
 ﻿using System;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Demo.SmartWorkers.Messages
+namespace Demo.SmartWorkers.Core
 {
     [BsonIgnoreExtraElements]
     public class PatientLock

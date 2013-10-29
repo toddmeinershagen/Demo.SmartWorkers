@@ -1,6 +1,4 @@
-﻿using Demo.SmartWorkers.Messages;
-
-namespace Demo.SmartWorkers.Data
+﻿namespace Demo.SmartWorkers.Core.Data
 {
     public interface IPatientVersionRepository
     {

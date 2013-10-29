@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Demo.SmartWorkers.Messages
+namespace Demo.SmartWorkers.Core
 {
     public class PatientChangedSnapshot : IPatientChanged
     {

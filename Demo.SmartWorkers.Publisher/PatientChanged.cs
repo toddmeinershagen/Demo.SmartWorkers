@@ -1,4 +1,4 @@
-﻿using Demo.SmartWorkers.Messages;
+﻿using Demo.SmartWorkers.Core;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace Demo.SmartWorkers.Publisher

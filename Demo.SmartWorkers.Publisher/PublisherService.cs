@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Configuration;
 using System.Threading;
-using Demo.SmartWorkers.Data;
+using Demo.SmartWorkers.Core;
+using Demo.SmartWorkers.Core.Data;
 using MassTransit;
 
 namespace Demo.SmartWorkers.Publisher
 {
     public class PublisherService
     {
+        private readonly ILogger _logger;
         private readonly IPatientVersionRepository _patientVersionRepository;
         private readonly IServiceBus _bus;
 
-        public PublisherService(IPatientVersionRepository patientVersionRepository, IServiceBus bus)
+        public PublisherService(ILogger logger, IPatientVersionRepository patientVersionRepository, IServiceBus bus)
         {
+            _logger = logger;
             _patientVersionRepository = patientVersionRepository;
             _bus = bus;
         }
@@ -45,7 +48,8 @@ namespace Demo.SmartWorkers.Publisher
                 message.Version = _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
                 _bus.Publish(message);
 
-                Console.WriteLine("Published message for MRN::{0}", message.MedicalRecordNumber);
+                var infoMessage = string.Format("Published message for MRN::{0}", message.MedicalRecordNumber);
+                _logger.Info(infoMessage);
 
                 var throttleInSeconds = Convert.ToDouble(ConfigurationManager.AppSettings["throttleInSeconds"]);
                 Throttle(throttleInSeconds);
