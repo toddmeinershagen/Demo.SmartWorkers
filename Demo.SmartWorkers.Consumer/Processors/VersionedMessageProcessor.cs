@@ -1,4 +1,5 @@
-﻿using Demo.SmartWorkers.Core;
+﻿using System;
+using Demo.SmartWorkers.Core;
 using Demo.SmartWorkers.Core.Data;
 
 namespace Demo.SmartWorkers.Consumer.Processors
@@ -28,7 +29,8 @@ namespace Demo.SmartWorkers.Consumer.Processors
             {
                 if (_messageProcessor.Process(message))
                 {
-                    _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
+                    var newVersion = new PatientVersion(message);
+                    _patientVersionRepository.Update(newVersion);
                     return true;
                 }
             }

@@ -12,42 +12,34 @@ namespace Demo.SmartWorkers.Publisher
         private readonly ILogger _logger;
         private readonly IPatientVersionRepository _patientVersionRepository;
         private readonly IServiceBus _bus;
+        private readonly Random _generator = new Random();
 
         public PublisherService(ILogger logger, IPatientVersionRepository patientVersionRepository, IServiceBus bus)
         {
             _logger = logger;
             _patientVersionRepository = patientVersionRepository;
             _bus = bus;
+            GetAppSetting = (name) => ConfigurationManager.AppSettings[name];
+            GetNextRandomNumber = (min, max) => _generator.Next(min, max);
         }
 
-        public void Publish(int numberToPublish)
+        public void Publish(int numberToPublish, PatientChanged[] patientChangedMessages)
         {
-            var patientChangedMessages = new[]
-                {
-                    new PatientChanged {FacilityId = 1, MedicalRecordNumber = 12700},
-                    new PatientChanged {FacilityId = 1, MedicalRecordNumber = 13567},
-                    new PatientChanged {FacilityId = 2, MedicalRecordNumber = 14726}, 
-                    new PatientChanged {FacilityId = 3, MedicalRecordNumber = 18750},
-                    new PatientChanged {FacilityId = 2, MedicalRecordNumber = 12701}, 
-                    new PatientChanged {FacilityId = 1, MedicalRecordNumber = 13568},
-                    new PatientChanged {FacilityId = 3, MedicalRecordNumber = 14725}, 
-                    new PatientChanged {FacilityId = 3, MedicalRecordNumber = 18751}
-                };
-
-            var generator = new Random();
-
             for (var counter = 0; counter < numberToPublish; counter++)
             {
-                var index = generator.Next(0, patientChangedMessages.Length);
+                var index = GetNextRandomNumber(0, patientChangedMessages.Length);
                 var message = patientChangedMessages[index];
 
+                var previousVersion = _patientVersionRepository.RemoveIfExpired(message.FacilityId, message.MedicalRecordNumber, VersionExpirationInMinutes);
                 message.Version = _patientVersionRepository.Increment(message.FacilityId, message.MedicalRecordNumber);
+                message.PreviousVersion = previousVersion;
+
                 _bus.Publish(message);
 
                 var infoMessage = string.Format("Published message for MRN::{0}", message.MedicalRecordNumber);
                 _logger.Info(infoMessage);
 
-                var throttleInSeconds = Convert.ToDouble(ConfigurationManager.AppSettings["throttleInSeconds"]);
+                var throttleInSeconds = Convert.ToDouble(GetAppSetting("throttleInSeconds"));
                 Throttle(throttleInSeconds);
             }
         }
@@ -57,5 +49,14 @@ namespace Demo.SmartWorkers.Publisher
             var throttleSeconds = Convert.ToInt32(Math.Round(seconds*1000, 0));
             Thread.Sleep(throttleSeconds);
         }
+
+        public int VersionExpirationInMinutes
+        {
+            get { return Convert.ToInt32(GetAppSetting("versionExpirationInMinutes")); }
+        }
+
+        public Func<string, string> GetAppSetting { get; set; }
+
+        public Func<int, int, int> GetNextRandomNumber { get; set; } 
     }
 }

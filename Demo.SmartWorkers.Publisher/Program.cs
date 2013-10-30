@@ -22,7 +22,19 @@ namespace Demo.SmartWorkers.Publisher
 
             var service = new PublisherService(new ConsoleLogger(), new PatientVersionRepository("patientVersionForPublisher"), Bus.Instance);
             const int numberToPublish = 1000;
-            service.Publish(numberToPublish);
+            var patientChangedMessages = new[]
+                {
+                    new PatientChanged {FacilityId = 1, MedicalRecordNumber = 12700},
+                    new PatientChanged {FacilityId = 1, MedicalRecordNumber = 13567},
+                    new PatientChanged {FacilityId = 2, MedicalRecordNumber = 14726}, 
+                    new PatientChanged {FacilityId = 3, MedicalRecordNumber = 18750},
+                    new PatientChanged {FacilityId = 2, MedicalRecordNumber = 12701}, 
+                    new PatientChanged {FacilityId = 1, MedicalRecordNumber = 13568},
+                    new PatientChanged {FacilityId = 3, MedicalRecordNumber = 14725}, 
+                    new PatientChanged {FacilityId = 3, MedicalRecordNumber = 18751}
+                };
+
+            service.Publish(numberToPublish, patientChangedMessages);
 
             Console.WriteLine("Published {0} messages", numberToPublish);
             Console.ReadLine();

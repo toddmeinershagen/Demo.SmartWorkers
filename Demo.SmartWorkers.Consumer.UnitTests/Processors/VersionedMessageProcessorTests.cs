@@ -10,6 +10,8 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
     [TestFixture]
     public class given_no_previous_version_exists_and_version_of_message_is_one_and_inner_processor_is_successful_when_processing : VersionedMessageProcessorTestsBase
     {
+        private IPatientChanged _message;
+
         [SetUp]
         public void SetUp()
         {
@@ -17,21 +19,21 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(null as PatientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
-            var message = Substitute.For<IPatientChanged>();
-            message.FacilityId.Returns(FacilityId);
-            message.MedicalRecordNumber.Returns(MedicalRecordNumber);
-            message.Version.Returns(1);
+             _message = Substitute.For<IPatientChanged>();
+            _message.FacilityId.Returns(FacilityId);
+            _message.MedicalRecordNumber.Returns(MedicalRecordNumber);
+            _message.Version.Returns(1);
 
-            innerProcessor.Process(message).Returns(true);
+            innerProcessor.Process(_message).Returns(true);
 
             var processor = new VersionedMessageProcessor(innerProcessor, VersionRepository);
-            Result = processor.Process(message);
+            Result = processor.Process(_message);
         }
 
         [Test]
-        public void should_increment_version()
+        public void should_update_version()
         {
-            VersionRepository.Received(1).Increment(FacilityId, MedicalRecordNumber);
+            VersionRepository.Received(1).Update(Arg.Is<PatientVersion>(x => x.Version == _message.Version));
         }
 
         [Test]
@@ -63,9 +65,9 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         }
 
         [Test]
-        public void should_not_increment_version()
+        public void should_not_update_version()
         {
-            VersionRepository.DidNotReceive().Increment(FacilityId, MedicalRecordNumber);
+            VersionRepository.DidNotReceive().Update(Arg.Any<PatientVersion>());
         }
 
         [Test]
@@ -95,9 +97,9 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         }
 
         [Test]
-        public void should_not_increment_version()
+        public void should_not_update_version()
         {
-            VersionRepository.DidNotReceive().Increment(FacilityId, MedicalRecordNumber);
+            VersionRepository.DidNotReceive().Update(Arg.Any<PatientVersion>());
         }
 
         [Test]
@@ -109,6 +111,8 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
 
     public class given_previous_version_exists_and_version_of_message_is_next_version_and_inner_processor_is_successful_when_processing : VersionedMessageProcessorTestsBase
     {
+        private IPatientChanged _message;
+
         [SetUp]
         public void SetUp()
         {
@@ -123,21 +127,21 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
             VersionRepository.FindOne(FacilityId, MedicalRecordNumber).Returns(patientVersion);
 
             var innerProcessor = Substitute.For<IMessageProcessor>();
-            var message = Substitute.For<IPatientChanged>();
-            message.FacilityId.Returns(FacilityId);
-            message.MedicalRecordNumber.Returns(MedicalRecordNumber);
-            message.Version.Returns(4);
+            _message = Substitute.For<IPatientChanged>();
+            _message.FacilityId.Returns(FacilityId);
+            _message.MedicalRecordNumber.Returns(MedicalRecordNumber);
+            _message.Version.Returns(4);
 
-            innerProcessor.Process(message).Returns(true);
+            innerProcessor.Process(_message).Returns(true);
 
             var processor = new VersionedMessageProcessor(innerProcessor, VersionRepository);
-            Result = processor.Process(message);
+            Result = processor.Process(_message);
         }
 
         [Test]
-        public void should_increment_version()
+        public void should_update_version()
         {
-            VersionRepository.Received(1).Increment(FacilityId, MedicalRecordNumber);
+            VersionRepository.Received(1).Update(Arg.Is<PatientVersion>(x => x.Version == _message.Version));
         }
 
         [Test]
@@ -176,9 +180,9 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         }
 
         [Test]
-        public void should_not_increment_version()
+        public void should_not_update_version()
         {
-            VersionRepository.DidNotReceive().Increment(FacilityId, MedicalRecordNumber);
+            VersionRepository.DidNotReceive().Update(Arg.Any<PatientVersion>());
         }
 
         [Test]
@@ -215,9 +219,9 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
         }
 
         [Test]
-        public void should_not_increment_version()
+        public void should_not_update_version()
         {
-            VersionRepository.DidNotReceive().Increment(FacilityId, MedicalRecordNumber);
+            VersionRepository.DidNotReceive().Update(Arg.Any<PatientVersion>());
         }
 
         [Test]
@@ -229,6 +233,8 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
 
     public class given_version_of_message_is_one_and_previous_version_exists_and_matches_message_and_inner_processor_succeeds_when_processing : VersionedMessageProcessorTestsBase
     {
+        private IPatientChanged _message;
+
         [SetUp]
         public void SetUp()
         {
@@ -246,20 +252,20 @@ namespace Demo.SmartWorkers.Consumer.UnitTests.Processors
             var innerProcessor = Substitute.For<IMessageProcessor>();
             innerProcessor.Process(Arg.Any<IPatientChanged>()).Returns(true);
 
-            var message = Substitute.For<IPatientChanged>();
-            message.FacilityId.Returns(FacilityId);
-            message.MedicalRecordNumber.Returns(MedicalRecordNumber);
-            message.Version.Returns(1);
-            message.PreviousVersion.Returns(currentVersion);
+            _message = Substitute.For<IPatientChanged>();
+            _message.FacilityId.Returns(FacilityId);
+            _message.MedicalRecordNumber.Returns(MedicalRecordNumber);
+            _message.Version.Returns(1);
+            _message.PreviousVersion.Returns(currentVersion);
 
             var processor = new VersionedMessageProcessor(innerProcessor, VersionRepository);
-            Result = processor.Process(message);
+            Result = processor.Process(_message);
         }
 
         [Test]
         public void should_increment_version()
         {
-            VersionRepository.Received(1).Increment(FacilityId, MedicalRecordNumber);
+            VersionRepository.Received(1).Update(Arg.Is<PatientVersion>(x => x.Version == _message.Version));
         }
 
         [Test]
